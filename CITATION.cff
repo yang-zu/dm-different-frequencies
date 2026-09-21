@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "Comparing forecasts made at different frequencies (MATLAB)"
+authors:
+  - family-names: Zhang
+    given-names: Rongmao
+  - family-names: Zu
+    given-names: Yang
+  - family-names: Li
+    given-names: Wei
+preferred-citation:
+  type: article
+  title: "Statistical comparison of forecasts made at different frequencies"
+  authors:
+    - family-names: Zhang
+      given-names: Rongmao
+    - family-names: Zu
+      given-names: Yang
+    - family-names: Li
+      given-names: Wei
+  journal: "Journal of Business and Economic Statistics"
+  year: 2026
+  doi: "10.1080/07350015.2026.2634825"
