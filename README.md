@@ -45,7 +45,9 @@ fprintf('two-sample DM = %.3f  (p = %.3f)\n', res.dm2s, res.pval_dm2s);
 
 Options: `'phi'` (AR coefficient for the Carlstein block-length rule, default `0.4`),
 `'blocklen'` (set the block length directly), `'lags'` (Newey–West lags for the aligned
-benchmark). See `help dm_difffreq`.
+benchmark), and `'tail'` — `'two'` (default), `'right'` (H1: forecast 1 worse) or
+`'left'` (H1: forecast 1 better), which sets whether the reported p-values are two- or
+one-sided. See `help dm_difffreq`.
 
 See [`examples/demo.m`](examples/demo.m) for a worked example. The user-facing function
 is [`dm_difffreq.m`](dm_difffreq.m); supporting routines are in [`lib/`](lib/).

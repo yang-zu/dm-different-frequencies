@@ -21,6 +21,8 @@ function res = dm_difffreq(u, v, delta_u, delta_v, varargin)
 %     'blocklen'  set the block length directly (overrides 'phi')
 %     'lags'      lags for the Newey-West long-run variance of the aligned DM
 %                 benchmark (default min(floor(0.75*m^(1/3)), m))
+%     'tail'      'two' (default), 'right' (H1: forecast 1 worse), or 'left'
+%                 (H1: forecast 1 better). Controls all reported p-values.
 %
 %   RES is a struct:
 %     dm2s,  pval_dm2s   two-sample DM statistic and two-sided p-value
@@ -48,10 +50,12 @@ function res = dm_difffreq(u, v, delta_u, delta_v, varargin)
     ip.addParameter('phi', 0.4, @(x) isscalar(x) && abs(x) < 1);
     ip.addParameter('blocklen', [], @(x) isempty(x) || (isscalar(x) && x >= 1));
     ip.addParameter('lags', [], @(x) isempty(x) || (isscalar(x) && x >= 0));
+    ip.addParameter('tail', 'two', @(s) any(strcmpi(s, {'two','left','right'})));
     ip.parse(u, v, delta_u, delta_v, varargin{:});
     phi      = ip.Results.phi;
     blocklen = ip.Results.blocklen;
     lags     = ip.Results.lags;
+    tail     = lower(ip.Results.tail);
 
     u = u(:);  v = v(:);
     n_u = numel(u);  n_v = numel(v);
@@ -110,19 +114,41 @@ function res = dm_difffreq(u, v, delta_u, delta_v, varargin)
     dm2s = (mean(u) - mean(v)) / sqrt(cov_uvbar0) * sqrt(nb);
     dmcl =  mean(u_bar_subs - v_bar_subs) / sqrt(cov_uvbar1) * sqrt(nb);
 
-    % ---- two-sided p-values (no Statistics Toolbox required) ----
+    % ---- p-values, with the requested tail (no Statistics Toolbox required) ----
+    % Sign: d = loss1 - loss2, so a positive statistic means forecast 1 is worse.
+    %   'two'   equal expected loss vs not
+    %   'right' H1: forecast 1 worse  (mean loss1 > mean loss2)
+    %   'left'  H1: forecast 1 better (mean loss1 < mean loss2)
     res.dm2s      = dm2s;
-    res.pval_dm2s = erfc(abs(dm2s)/sqrt(2));                  % 2*(1-normcdf(|z|))
+    res.pval_dm2s = pval_norm(dm2s, tail);
     res.dmcl      = dmcl;
-    res.pval_dmcl = t_pvalue_twosided(dmcl, nb-1);
+    res.pval_dmcl = pval_t(dmcl, nb-1, tail);
     res.dm        = dm;
-    res.pval_dm   = erfc(abs(dm)/sqrt(2));
+    res.pval_dm   = pval_norm(dm, tail);
     res.nb        = nb;
     res.blocklen  = lb_u;
+    res.tail      = tail;
 end
 
-function p = t_pvalue_twosided(tstat, df)
-% Two-sided p-value of a Student-t statistic via the regularized incomplete
-% beta function (base MATLAB): P(|T|>|t|) = I_{df/(df+t^2)}(df/2, 1/2).
-    p = betainc(df/(df + tstat.^2), df/2, 0.5);
+function p = pval_norm(z, tail)
+% p-value of a standard-normal statistic
+    switch tail
+        case 'two',   p = erfc(abs(z)/sqrt(2));   % P(|Z| > |z|)
+        case 'right', p = 0.5*erfc(z/sqrt(2));    % P(Z > z)
+        case 'left',  p = 0.5*erfc(-z/sqrt(2));   % P(Z < z)
+    end
+end
+
+function p = pval_t(t, df, tail)
+% p-value of a Student-t statistic via the regularized incomplete beta
+% function (base MATLAB). Ix = P(|T| > |t|) = I_{df/(df+t^2)}(df/2, 1/2).
+    Ix = betainc(df/(df + t.^2), df/2, 0.5);
+    switch tail
+        case 'two'
+            p = Ix;
+        case 'right'                              % P(T > t)
+            if t >= 0, p = 0.5*Ix; else, p = 1 - 0.5*Ix; end
+        case 'left'                               % P(T < t)
+            if t >= 0, p = 1 - 0.5*Ix; else, p = 0.5*Ix; end
+    end
 end
