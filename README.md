@@ -7,10 +7,16 @@ MATLAB code implementing the two-sample forecast-comparison test proposed in:
 > [doi:10.1080/07350015.2026.2634825](https://doi.org/10.1080/07350015.2026.2634825)
 
 Standard Diebold–Mariano tests require the two forecasts' losses to be observed at the
-**same** frequency. This test compares the average loss of two forecasts observed at
-**different** frequencies (for example a monthly forecast against a quarterly one),
-using a block construction to align the series in time. This is a **ready-to-use
-implementation**, not replication code for the paper's tables.
+**same** frequency. This package compares the average loss of two forecasts observed at
+**different** frequencies (for example a monthly forecast against a quarterly one). A
+single call returns the **three forecast-evaluation tests** studied in the paper:
+
+- **`dm2s`** — the proposed two-sample DM test (standard-normal reference);
+- **`dmcl`** — the clustered-t test (Student-t reference, `nb-1` degrees of freedom);
+- **`dm`** — the aligned Diebold–Mariano test (subsample the high-frequency series onto
+  the low-frequency dates, then apply a standard DM test).
+
+This is a **ready-to-use implementation**, not replication code for the paper's tables.
 
 ## Install
 
@@ -38,10 +44,14 @@ fprintf('two-sample DM = %.3f  (p = %.3f)\n', res.dm2s, res.pval_dm2s);
 
 | field | meaning |
 |-------|---------|
-| `dm2s`, `pval_dm2s` | the paper's two-sample DM test (standard-normal reference), two-sided p-value |
+| `dm2s`, `pval_dm2s` | two-sample DM test — the proposed test (standard-normal reference) |
 | `dmcl`, `pval_dmcl` | clustered-t test (Student-t reference, `nb-1` d.f.) |
-| `dm`, `pval_dm`     | aligned Diebold–Mariano benchmark (normal reference) |
+| `dm`, `pval_dm`     | aligned Diebold–Mariano test (standard-normal reference) |
 | `nb`, `blocklen`    | number of blocks and the block length used |
+
+All three are computed from the same block construction and share the `'tail'` setting.
+The two-sample `dm2s` is the paper's recommended test; the other two are the competing
+procedures the paper compares against.
 
 Options: `'phi'` (AR coefficient for the Carlstein block-length rule, default `0.4`),
 `'blocklen'` (set the block length directly), `'lags'` (Newey–West lags for the aligned
